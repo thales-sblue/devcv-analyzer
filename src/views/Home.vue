@@ -6,20 +6,21 @@
 
       <div class="relative z-10 space-y-8">
         <h1 class="text-4xl font-bold text-white text-center tracking-wide">
-          Analyzer
+          DevCV Analyzer
         </h1>
 
         <p class="text-center text-gray-400 text-sm">
           Envie seu currículo em <span class="text-purple-400 font-medium">PDF</span> ou <span class="text-purple-400 font-medium">DOCX</span> e receba insights técnicos.
         </p>
 
+        <!-- Componente de upload -->
         <Upload @file-loaded="processFile" />
 
-        <div v-if="text" class="bg-[#1c1c20] text-gray-300 p-4 rounded-lg text-sm whitespace-pre-wrap max-h-64 overflow-y-auto border border-[#2c2c30]">
-          {{ text }}
-        </div>
+        <!-- Resultado da extração -->
+        <Result v-if="text || error" :text="text" />
 
-        <div v-if="text" class="text-center">
+        <!-- Botão de análise -->
+        <div v-if="text && !error" class="text-center">
           <button
             @click="analisarTexto"
             class="mt-4 bg-purple-700 hover:bg-purple-800 text-white px-6 py-2 rounded-lg transition duration-300"
@@ -28,6 +29,7 @@
           </button>
         </div>
 
+        <!-- Relatório final -->
         <div v-if="relatorio.length" class="bg-[#1a1a1d] border border-[#2c2c30] rounded-lg p-4">
           <h2 class="text-lg font-semibold text-white mb-2">Tecnologias encontradas:</h2>
           <ul class="list-disc list-inside text-purple-300 text-sm">
@@ -40,31 +42,40 @@
 </template>
 
 <script setup>
-import { ref } from 'vue';
-import Upload from '../components/Upload.vue';
-import { extractTextFromFile } from '../utils/extractText';
+import { ref } from 'vue'
+import Upload from '../components/Upload.vue'
+import Result from '../components/Result.vue'
+import { extractTextFromFile } from '../utils/extractText.js'
 
-const text = ref('');
-const relatorio = ref([]);
+const text = ref('')
+const relatorio = ref([])
+const error = ref(false)
 
 const tecnologias = [
   'Java', 'PHP', 'Node.js', 'JavaScript', 'React', 'Vue', 'Angular',
   'MySQL', 'PostgreSQL', 'MongoDB', 'Git', 'Docker', 'Kubernetes',
   'Linux', 'HTML', 'CSS', 'TypeScript'
-];
+]
 
 const processFile = async (file) => {
-  text.value = '';
-  relatorio.value = [];
+  text.value = ''
+  relatorio.value = []
+  error.value = false
 
-  const conteudo = await extractTextFromFile(file);
-  text.value = conteudo || 'Erro ao extrair texto.';
-};
+  try {
+    const conteudo = await extractTextFromFile(file)
+    text.value = conteudo || 'Nenhum conteúdo detectado.'
+  } catch (err) {
+    console.error('Erro ao extrair texto:', err)
+    text.value = 'Erro ao extrair texto do arquivo.'
+    error.value = true
+  }
+}
 
 const analisarTexto = () => {
-  const lowerText = text.value.toLowerCase();
+  const lowerText = text.value.toLowerCase()
   relatorio.value = tecnologias.filter((tech) =>
     lowerText.includes(tech.toLowerCase())
-  );
-};
+  )
+}
 </script>
