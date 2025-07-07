@@ -1,1 +1,15 @@
-// Result.vue
+<template>
+  <div class="mt-6 bg-zinc-800 p-6 rounded-lg text-left w-full max-w-3xl mx-auto">
+    <h2 class="text-xl font-semibold mb-4 text-accent">Resultado da análise</h2>
+    <div v-if="text">
+      <p class="text-sm text-gray-300 whitespace-pre-wrap">{{ text }}</p>
+    </div>
+    <div v-else class="text-sm text-gray-400">Nenhum currículo foi analisado ainda.</div>
+  </div>
+</template>
+
+<script setup>
+defineProps({
+  text: String
+})
+</script>
