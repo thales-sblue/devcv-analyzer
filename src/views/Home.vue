@@ -1,7 +1,6 @@
 <template>
   <div class="min-h-screen bg-[#0b0b0e] flex items-center justify-center p-6">
     <div class="bg-gradient-to-br from-[#1a1a1d] to-[#121214] border border-[#2c2c30] shadow-2xl rounded-xl p-10 w-full max-w-2xl relative overflow-hidden">
-      <!-- Brilho do fundo -->
       <div class="absolute -inset-1 bg-gradient-to-r from-purple-700/10 via-purple-800/5 to-transparent rounded-xl blur-xl opacity-30 z-0"></div>
 
       <div class="relative z-10 space-y-8">
@@ -13,13 +12,8 @@
           Envie seu currículo em <span class="text-purple-400 font-medium">PDF</span> ou <span class="text-purple-400 font-medium">DOCX</span> e receba insights técnicos.
         </p>
 
-        <!-- Componente de upload -->
         <Upload @file-loaded="processFile" />
 
-        <!-- Resultado da extração -->
-        <Result v-if="text || error" :text="text" />
-
-        <!-- Botão de análise -->
         <div v-if="text && !error" class="text-center">
           <button
             @click="analisarTexto"
@@ -29,23 +23,19 @@
           </button>
         </div>
 
-        <!-- Relatório final -->
-        <div v-if="relatorio.length" class="bg-[#1a1a1d] border border-[#2c2c30] rounded-lg p-4">
-          <h2 class="text-lg font-semibold text-white mb-2">Tecnologias encontradas:</h2>
-          <ul class="list-disc list-inside text-purple-300 text-sm">
-            <li v-for="tech in relatorio" :key="tech">{{ tech }}</li>
-          </ul>
-        </div>
+        <Result v-if="relatorio.length" :relatorio="relatorio" />
+        <Score v-if="relatorio.length" :nota="notaTecnica" :faltando="tecnologiasFaltando" />
       </div>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import Upload from '../components/Upload.vue'
 import Result from '../components/Result.vue'
 import { extractTextFromFile } from '../utils/extractText.js'
+import Score from '../components/Score.vue'
 
 const text = ref('')
 const relatorio = ref([])
@@ -64,10 +54,10 @@ const processFile = async (file) => {
 
   try {
     const conteudo = await extractTextFromFile(file)
-    text.value = conteudo || 'Nenhum conteúdo detectado.'
+    text.value = conteudo || ''
   } catch (err) {
     console.error('Erro ao extrair texto:', err)
-    text.value = 'Erro ao extrair texto do arquivo.'
+    text.value = ''
     error.value = true
   }
 }
@@ -78,4 +68,14 @@ const analisarTexto = () => {
     lowerText.includes(tech.toLowerCase())
   )
 }
+
+const notaTecnica = computed(() => {
+  const total = tecnologias.length
+  const encontradas = relatorio.value.length
+  return Math.round((encontradas / total) * 100)
+})
+
+const tecnologiasFaltando = computed(() =>
+  tecnologias.filter((tech) => !relatorio.value.includes(tech))
+)
 </script>
